@@ -11,7 +11,6 @@ import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
-import net.imglib2.realtransform.AffineTransform3D;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.janelia.saalfeldlab.n5.*;
 
@@ -24,7 +23,6 @@ public class ManualExportPanel {
 
     ImagePlus imp;
     String filePath;
-    AffineTransform3D sourceTransform;
     DownsampleBlock.DownsamplingMethod downsamplingMethod;
     String imageName;
     ImageDataFormat imageDataFormat;
@@ -34,10 +32,10 @@ public class ManualExportPanel {
     static int lastCompressionChoice = 0;
     static boolean lastCompressionDefaultSettings = true;
 
-    public ManualExportPanel(ImagePlus imp, String filePath, AffineTransform3D sourceTransform, DownsampleBlock.DownsamplingMethod downsamplingMethod, String imageName, ImageDataFormat imageDataFormat ) {
+    public ManualExportPanel(ImagePlus imp, String filePath, DownsampleBlock.DownsamplingMethod downsamplingMethod,
+                             String imageName, ImageDataFormat imageDataFormat ) {
         this.imp = imp;
         this.filePath = filePath;
-        this.sourceTransform = sourceTransform;
         this.downsamplingMethod = downsamplingMethod;
         this.imageName = imageName;
         this.imageDataFormat = imageDataFormat;
@@ -122,17 +120,17 @@ public class ManualExportPanel {
     private void writeImage( int[][] resolutions, int[][] subdivisions, Compression compression ) {
         switch( imageDataFormat ) {
             case BdvN5:
-                new WriteImgPlusToN5().export(imp, resolutions, subdivisions, filePath, sourceTransform,
+                new WriteImgPlusToN5().export(imp, resolutions, subdivisions, filePath,
                         downsamplingMethod, compression, new String[]{imageName});
                 break;
 
             case BdvOmeZarr:
-                new WriteImgPlusToN5BdvOmeZarr().export(imp, resolutions, subdivisions, filePath, sourceTransform,
+                new WriteImgPlusToN5BdvOmeZarr().export(imp, resolutions, subdivisions, filePath,
                         downsamplingMethod, compression, new String[]{imageName});
                 break;
 
             case OmeZarr:
-                new WriteImgPlusToN5OmeZarr().export(imp, resolutions, subdivisions, filePath, sourceTransform,
+                new WriteImgPlusToN5OmeZarr().export(imp, resolutions, subdivisions, filePath,
                         downsamplingMethod, compression, new String[]{imageName});
                 break;
 

@@ -421,7 +421,6 @@ public class ProjectsCreatorPanel extends JFrame {
 
         if ( !datasetName.equals("") ) {
             ImagePlus currentImage = IJ.getImage();
-            String defaultAffineTransform = ProjectCreatorHelper.generateDefaultAffine( currentImage );
 
             final GenericDialog gd = new GenericDialog( "Add Current Image To MoBIE Project..." );
             gd.addMessage( "Make sure your pixel size, and unit,\n are set properly under Image > Properties...");
@@ -434,7 +433,11 @@ public class ProjectsCreatorPanel extends JFrame {
             String[] imageFormats = new String[]{ ImageDataFormat.BdvN5.toString(),
                     ImageDataFormat.BdvOmeZarr.toString() };
             gd.addChoice( "Image format", imageFormats, imageFormats[0] );
-            gd.addStringField("Affine", defaultAffineTransform, 35 );
+            gd.addMessage("Affine transform:");
+            gd.addStringField("Row 1", "1.0, 0.0, 0.0, 0.0", 25 );
+            gd.addStringField( "Row 2", "0.0, 1.0, 0.0, 0.0", 25 );
+            gd.addStringField( "Row 3", "0.0, 0.0, 1.0, 0.0", 25 );
+
             gd.addCheckbox("Use default export settings", true);
             gd.addCheckbox("Make view exclusive", false );
 
@@ -444,7 +447,10 @@ public class ProjectsCreatorPanel extends JFrame {
                 String imageName = gd.getNextString();
                 ProjectCreator.ImageType imageType = ProjectCreator.ImageType.valueOf( gd.getNextChoice() );
                 ImageDataFormat imageFormat = ImageDataFormat.fromString( gd.getNextChoice() );
-                String affineTransform = gd.getNextString().trim();
+                String affineRow1 = gd.getNextString().trim();
+                String affineRow2 = gd.getNextChoice().trim();
+                String affineRow3 = gd.getNextChoice().trim();
+                String affineTransform = String.join(",", affineRow1, affineRow2, affineRow3 );
                 boolean useDefaultSettings = gd.getNextBoolean();
                 boolean exclusive = gd.getNextBoolean();
 

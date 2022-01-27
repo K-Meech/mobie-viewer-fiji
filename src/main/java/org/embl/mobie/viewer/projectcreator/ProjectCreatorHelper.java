@@ -55,7 +55,7 @@ public class ProjectCreatorHelper {
         return true;
     }
 
-    public static boolean isValidAffine(String affine) {
+    public static boolean isValidAffine( String affine ) {
         if (!affine.matches("^[0-9. ]+$")) {
             IJ.log("Invalid affine transform - must contain only numbers and spaces");
             return false;
@@ -71,7 +71,7 @@ public class ProjectCreatorHelper {
     }
 
     public static AffineTransform3D parseAffineString(String affine) {
-        if (isValidAffine(affine)) {
+        if ( isValidAffine(affine) ) {
             AffineTransform3D sourceTransform = new AffineTransform3D();
             String[] splitAffineTransform = affine.split(" ");
             double[] doubleAffineTransform = new double[splitAffineTransform.length];

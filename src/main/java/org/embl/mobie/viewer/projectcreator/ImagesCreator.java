@@ -118,9 +118,10 @@ public class ImagesCreator {
             if ( !useDefaultSettings ) {
                 new ManualExportPanel( imp, filePath, sourceTransform, downsamplingMethod, imageName, imageDataFormat).getManualExportParameters();
             } else {
-                writeDefaultImage( imp, filePath, sourceTransform, downsamplingMethod, imageName, imageDataFormat );
+                writeDefaultImage( imp, filePath, downsamplingMethod, imageName, imageDataFormat );
             }
 
+            // TODO - ADD AFFINE TO JSON
             // check image written successfully, before writing jsons
             if ( imageFile.exists() ) {
                 boolean is2D;
@@ -150,24 +151,24 @@ public class ImagesCreator {
         }
     }
 
-    private void writeDefaultImage( ImagePlus imp, String filePath, AffineTransform3D sourceTransform,
+    private void writeDefaultImage( ImagePlus imp, String filePath,
                                     DownsampleBlock.DownsamplingMethod downsamplingMethod,
                                     String imageName, ImageDataFormat imageDataFormat ) {
 
         // gzip compression by default
         switch( imageDataFormat ) {
             case BdvN5:
-                new WriteImgPlusToN5().export(imp, filePath, sourceTransform, downsamplingMethod,
-                        new GzipCompression(), new String[]{imageName} );
+                new WriteImgPlusToN5().export( imp, filePath, downsamplingMethod, new GzipCompression(),
+                        new String[]{imageName} );
                 break;
 
             case BdvOmeZarr:
-                new WriteImgPlusToN5BdvOmeZarr().export(imp, filePath, sourceTransform, downsamplingMethod,
+                new WriteImgPlusToN5BdvOmeZarr().export(imp, filePath, downsamplingMethod,
                         new GzipCompression(), new String[]{imageName} );
                 break;
 
             case OmeZarr:
-                new WriteImgPlusToN5OmeZarr().export(imp, filePath, sourceTransform, downsamplingMethod,
+                new WriteImgPlusToN5OmeZarr().export(imp, filePath, downsamplingMethod,
                         new GzipCompression(), new String[]{imageName});
                 break;
 
