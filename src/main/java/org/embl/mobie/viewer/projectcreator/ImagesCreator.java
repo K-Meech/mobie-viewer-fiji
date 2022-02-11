@@ -5,6 +5,7 @@ import bdv.spimdata.SpimDataMinimal;
 import bdv.spimdata.XmlIoSpimDataMinimal;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
+import ij.plugin.ChannelSplitter;
 import ij.process.LUT;
 import org.embl.mobie.io.ImageDataFormat;
 import org.embl.mobie.io.SpimDataOpener;
@@ -16,7 +17,6 @@ import org.embl.mobie.io.ome.zarr.readers.N5OmeZarrReader;
 import org.embl.mobie.io.ome.zarr.writers.imgplus.WriteImgPlusToN5BdvOmeZarr;
 import org.embl.mobie.io.ome.zarr.writers.imgplus.WriteImgPlusToN5OmeZarr;
 
-import org.embl.mobie.viewer.projectcreator.ui.ManualExportPanel;
 import org.embl.mobie.io.util.FileAndUrlUtils;
 import de.embl.cba.tables.Tables;
 import ij.IJ;
@@ -44,7 +44,6 @@ import sc.fiji.bdvpg.sourceandconverter.importer.SourceAndConverterFromSpimDataC
 import mpicbg.spim.data.sequence.SequenceDescription;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -131,41 +130,19 @@ public class ImagesCreator {
             deleteImageFiles( datasetName, imageName, imageDataFormat );
         }
 
-        DownsampleBlock.DownsamplingMethod downsamplingMethod = getDownsamplingMethod( imageType );
-
         File imageDir = new File(imageFile.getParent());
         if ( !imageDir.exists() ) {
             imageDir.mkdirs();
         }
 
-        if ( resolutions == null || subdivisions == null || compression == null ) {
-            writeDefaultImage( imp, filePath, sourceTransform, downsamplingMethod, imageName, imageDataFormat );
+        if ( imp.getNChannels() > 1 ) {
+            IJ.log("Image is multichannel - splitting into individual channels...");
+            writeMultichannelImageAndMetadata( imp, imageName, datasetName, imageDataFormat, imageType, sourceTransform,
+                    uiSelectionGroup, exclusive, resolutions, subdivisions, compression );
         } else {
-            writeDefaultImage( imp, filePath, sourceTransform, downsamplingMethod, imageName, imageDataFormat,
-                    resolutions, subdivisions, compression );
+            writeDefaultImageAndMetadata( imp, imageName, datasetName, imageDataFormat, imageType, sourceTransform,
+                    uiSelectionGroup, exclusive, resolutions, subdivisions, compression );
         }
-
-        // check image written successfully, before writing jsons
-        if ( imageFile.exists() ) {
-            boolean is2D;
-            if ( imp.getNDimensions() <= 2 ) {
-                is2D = true;
-            } else {
-                is2D = false;
-            }
-            if (imageType == ProjectCreator.ImageType.image) {
-                double[] contrastLimits = new double[]{imp.getDisplayRangeMin(), imp.getDisplayRangeMax()};
-                LUT lut = imp.getLuts()[0];
-                String colour = "r=" + lut.getRed(255) + ",g=" + lut.getGreen(255) + ",b=" +
-                        lut.getBlue(255) + ",a=" + lut.getAlpha(255);
-                updateTableAndJsonsForNewImage(imageName, datasetName, uiSelectionGroup, is2D,
-                        imp.getNFrames(), imageDataFormat, contrastLimits, colour, exclusive );
-            } else {
-                updateTableAndJsonsForNewSegmentation(imageName, datasetName, uiSelectionGroup, is2D,
-                        imp.getNFrames(), imageDataFormat, exclusive );
-            }
-        }
-
     }
 
     private DownsampleBlock.DownsamplingMethod getDownsamplingMethod( ProjectCreator.ImageType imageType ) {
@@ -179,6 +156,60 @@ public class ImagesCreator {
         }
 
         return downsamplingMethod;
+    }
+
+    private void writeMultichannelImageAndMetadata(ImagePlus imp,
+                                                   String imageName, String datasetName,
+                                                   ImageDataFormat imageDataFormat, ProjectCreator.ImageType imageType,
+                                                   AffineTransform3D sourceTransform, String uiSelectionGroup, boolean exclusive,
+                                                   int[][] resolutions, int[][] subdivisions, Compression compression ) throws SpimDataException {
+        ImagePlus[] channels = ChannelSplitter.split( imp );
+
+        for ( int i = 0; i < channels.length; i++ ) {
+            IJ.log("Writing channel " + i + "..." );
+            ImagePlus channel = channels[i];
+            String channelImageName = imageName + "-ch" + i;
+            writeDefaultImageAndMetadata( channel, channelImageName, datasetName,
+                    imageDataFormat, imageType, sourceTransform, uiSelectionGroup, exclusive, resolutions, subdivisions,
+                    compression );
+        }
+    }
+
+    private void writeDefaultImageAndMetadata(ImagePlus imp,
+                                              String imageName, String datasetName,
+                                              ImageDataFormat imageDataFormat, ProjectCreator.ImageType imageType,
+                                              AffineTransform3D sourceTransform, String uiSelectionGroup, boolean exclusive,
+                                              int[][] resolutions, int[][] subdivisions, Compression compression ) throws SpimDataException {
+        String filePath = getDefaultLocalImagePath( datasetName, imageName, imageDataFormat );
+        DownsampleBlock.DownsamplingMethod downsamplingMethod = getDownsamplingMethod( imageType );
+
+        if (resolutions == null || subdivisions == null || compression == null) {
+            writeDefaultImage(imp, filePath, sourceTransform, downsamplingMethod, imageName, imageDataFormat);
+        } else {
+            writeDefaultImage(imp, filePath, sourceTransform, downsamplingMethod, imageName, imageDataFormat,
+                    resolutions, subdivisions, compression);
+        }
+
+        // check image written successfully, before writing jsons
+        if ( new File(filePath).exists()) {
+            boolean is2D;
+            if (imp.getNDimensions() <= 2) {
+                is2D = true;
+            } else {
+                is2D = false;
+            }
+            if (imageType == ProjectCreator.ImageType.image) {
+                double[] contrastLimits = new double[]{imp.getDisplayRangeMin(), imp.getDisplayRangeMax()};
+                LUT lut = imp.getLuts()[0];
+                String colour = "r=" + lut.getRed(255) + ",g=" + lut.getGreen(255) + ",b=" +
+                        lut.getBlue(255) + ",a=" + lut.getAlpha(255);
+                updateTableAndJsonsForNewImage( imageName, datasetName, uiSelectionGroup, is2D,
+                        imp.getNFrames(), imageDataFormat, contrastLimits, colour, exclusive );
+            } else {
+                updateTableAndJsonsForNewSegmentation( imageName, datasetName, uiSelectionGroup, is2D,
+                        imp.getNFrames(), imageDataFormat, exclusive );
+            }
+        }
     }
 
     private void writeDefaultImage( ImagePlus imp, String filePath, AffineTransform3D sourceTransform,
