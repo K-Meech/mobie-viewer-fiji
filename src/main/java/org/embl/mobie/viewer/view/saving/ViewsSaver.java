@@ -154,30 +154,26 @@ public class ViewsSaver {
     }
 
     private void saveNewViewToFileSystem( View view, String viewName ) {
-        new Thread( () -> {
-            String jsonPath = chooseFileSystemJson();
-            if ( jsonPath != null ) {
-                try {
-                    saveNewViewToAdditionalViewsJson( view, viewName, jsonPath );
-                    addViewToUi( viewName, view );
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        String jsonPath = chooseFileSystemJson();
+        if ( jsonPath != null ) {
+            try {
+                saveNewViewToAdditionalViewsJson( view, viewName, jsonPath );
+                addViewToUi( viewName, view );
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        }).start();
+        }
     }
 
     private void overwriteExistingViewOnFileSystem( View view ) {
-        new Thread( () -> {
-            String jsonPath = chooseFileSystemJson();
-            if ( jsonPath != null ) {
-                try {
-                    overwriteExistingViewInAdditionalViewsJson( view, jsonPath );
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        String jsonPath = chooseFileSystemJson();
+        if ( jsonPath != null ) {
+            try {
+                overwriteExistingViewInAdditionalViewsJson( view, jsonPath );
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        }).start();
+        }
     }
 
     private void saveNewViewToProject( View view, String viewName, ProjectSaveLocation projectSaveLocation ) {

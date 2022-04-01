@@ -21,27 +21,25 @@ public class AdditionalViewsLoader {
     }
 
     public void loadAdditionalViewsDialog() {
-        new Thread( () -> {
-            try {
-                String selectedFilePath = null;
-                MoBIEUtils.FileLocation fileLocation = MoBIEUtils.loadFromProjectOrFileSystemDialog();
-                if ( fileLocation == null )
-                    return;
-                if ( fileLocation == MoBIEUtils.FileLocation.Project ) {
-                    selectedFilePath = MoBIEUtils.selectPathFromProject( moBIE.getDatasetPath("misc", "views" ), "View" );
-                } else {
-                    selectedFilePath = MoBIEUtils.selectFilePath( "json", "View", true );
-                }
-
-                if (selectedFilePath != null) {
-                    MoBIELookAndFeelToggler.setMoBIELaf();
-                    loadViews( selectedFilePath );
-                    MoBIELookAndFeelToggler.resetMoBIELaf();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+        try {
+            String selectedFilePath = null;
+            MoBIEUtils.FileLocation fileLocation = MoBIEUtils.loadFromProjectOrFileSystemDialog();
+            if ( fileLocation == null )
+                return;
+            if ( fileLocation == MoBIEUtils.FileLocation.Project ) {
+                selectedFilePath = MoBIEUtils.selectPathFromProject( moBIE.getDatasetPath("misc", "views" ), "View" );
+            } else {
+                selectedFilePath = MoBIEUtils.selectFilePath( "json", "View", true );
             }
-        }).start();
+
+            if (selectedFilePath != null) {
+                MoBIELookAndFeelToggler.setMoBIELaf();
+                loadViews( selectedFilePath );
+                MoBIELookAndFeelToggler.resetMoBIELaf();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void loadViews( String selectedFilePath ) throws IOException

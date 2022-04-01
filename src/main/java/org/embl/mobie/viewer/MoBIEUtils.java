@@ -24,6 +24,7 @@ import org.embl.mobie.viewer.transform.MergedGridSource;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
